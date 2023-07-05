@@ -26,15 +26,22 @@ let db = mongoClient.db()
 // Schema
 const userSchema = Joi.object({
   nome: Joi.string().required(),
-  email: Joi.string().required(),
+  email: Joi.string().email().required(),
   senha: Joi.string().min(3).required()
 })
 
 // endpoinst
 app.post('/cadastro', async (req, res) => {
-  const { nome, email, senha } = req.body
+  const { nome, email, senha, confirmarSenha } = req.body
 
-  const validation = userSchema.validate(req.body, { abortEarly: false })
+  if (senha !== confirmarSenha) {
+    return res.status(400).send('As senhas não coincidem')
+  }
+
+  const validation = userSchema.validate(req.body, {
+    abortEarly: false,
+    allowUnknown: true
+  })
   if (validation.error) {
     return res
       .status(422)
@@ -42,10 +49,10 @@ app.post('/cadastro', async (req, res) => {
   }
   try {
     const user = await db.collection('users').findOne({ email })
-    if (user) return res.sendStatus(409)
+    if (user) return res.status(409).send('usuario já cadastrado')
 
     const passwordHash = bcrypt.hashSync(senha, 10)
-    await db.collection('user').insertOne({ nome, email, senha: passwordHash })
+    await db.collection('users').insertOne({ nome, email, senha: passwordHash })
     res.sendStatus(201)
   } catch (err) {
     res.status(500).send(err.message)
