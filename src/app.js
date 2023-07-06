@@ -4,6 +4,7 @@ import cors from 'cors'
 import { MongoClient } from 'mongodb'
 import Joi from 'joi'
 import bcrypt from 'bcrypt'
+import { v4 as uuid } from 'uuid'
 
 const app = express()
 
@@ -26,6 +27,11 @@ let db = mongoClient.db()
 // Schema
 const userSchema = Joi.object({
   nome: Joi.string().required(),
+  email: Joi.string().email().required(),
+  senha: Joi.string().min(3).required()
+})
+
+const loginSchema = Joi.object({
   email: Joi.string().email().required(),
   senha: Joi.string().min(3).required()
 })
@@ -59,16 +65,35 @@ app.post('/cadastro', async (req, res) => {
   }
 })
 
-// app.get('/', (req, res) => {
-//   res.send('Olá, mundo!')
-// })
+app.post('/', async (req, res) => {
+  const { email, senha } = req.body
 
-// app.post('/cadastro', (req, res) => {
-//   db.collection('users').insertOne({
-//     email: 'caio@caio',
-//     password: '1234'
-//   })
-// })
+  const validation = loginSchema.validate(req.body, { abortEarly: false })
+
+  if (validation.error) {
+    return res
+      .status(422)
+      .send(validation.error.details.map(detail => detail.message))
+  }
+
+  try {
+    const user = await db.collection('users').findOne({ email })
+    if (!user) {
+      return res.status(404).send('usuario não encontrado')
+    }
+
+    if (user && bcrypt.compareSync(senha, user.senha)) {
+      const token = uuid()
+
+      await db.collection('sessions').insertOne({ userId: user._id, token })
+      res.send(token).status(200)
+    } else {
+      res.status(404).send('email ou senha incorretos')
+    }
+  } catch (err) {
+    res.status(422).send(err.message)
+  }
+})
 
 // deixar a porta escutando, a espera de requisições
 const port = 5000
