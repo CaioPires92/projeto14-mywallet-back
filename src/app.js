@@ -186,6 +186,20 @@ app.get('/home', async (req, res) => {
   }
 })
 
+app.post('/logout', async (req, res) => {
+  const { authorization } = req.headers
+  const token = authorization?.replace('Bearer', '')
+
+  if (!token) return res.sendStatus(401)
+
+  try {
+    await db.collection('sessions').deleteOne({ token })
+    return res.sendStatus(200)
+  } catch (err) {
+    res.status(500).send(err.message)
+  }
+})
+
 // deixar a porta escutando, a espera de requisições
 const port = 5000
 app.listen(port, () => {
