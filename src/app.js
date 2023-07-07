@@ -161,26 +161,26 @@ app.get('/home', async (req, res) => {
       .sort({ data: -1 })
       .toArray()
 
-    let saldoFinal = 0
-    let entradas = 0
-    let saidas = 0
+    // let saldoFinal = 0
+    // let entradas = 0
+    // let saidas = 0
 
-    transactions.forEach(transaction => {
-      if (transaction.tipo === 'entrada') {
-        entradas += transaction.valor
-      } else if (transaction.tipo === 'saida') {
-        saidas += transaction.valor
-      }
-    })
+    // transactions.forEach(transaction => {
+    //   if (transaction.tipo === 'entrada') {
+    //     entradas += transaction.valor
+    //   } else if (transaction.tipo === 'saida') {
+    //     saidas += transaction.valor
+    //   }
+    // })
 
-    saldoFinal = entradas - saidas
+    // saldoFinal = entradas - saidas
 
-    const response = {
-      transactions,
-      saldoFinal
-    }
+    // const response = {
+    //   transactions,
+    //   saldoFinal
+    // }
 
-    return res.send(response)
+    return res.send(transactions)
   } catch (err) {
     res.status(500).send(err.message)
   }
@@ -201,7 +201,7 @@ app.post('/logout', async (req, res) => {
 })
 
 // deixar a porta escutando, a espera de requisições
-const port = 5000
+const port = process.env.PORT || 5000
 app.listen(port, () => {
   console.log(`servidor rodando na porta ${port}`)
 })
