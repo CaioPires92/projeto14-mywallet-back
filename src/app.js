@@ -5,6 +5,7 @@ import { MongoClient } from 'mongodb'
 import Joi from 'joi'
 import bcrypt from 'bcrypt'
 import { v4 as uuid } from 'uuid'
+import dayjs from 'dayjs'
 
 const app = express()
 
@@ -34,6 +35,11 @@ const userSchema = Joi.object({
 const loginSchema = Joi.object({
   email: Joi.string().email().required(),
   senha: Joi.string().min(3).required()
+})
+
+const transactionScema = Joi.object({
+  valor: Joi.number().positive().required(),
+  descricao: Joi.string().required()
 })
 
 // endpoinst
@@ -90,6 +96,40 @@ app.post('/', async (req, res) => {
     } else {
       res.status(404).send('email ou senha incorretos')
     }
+  } catch (err) {
+    res.status(422).send(err.message)
+  }
+})
+
+app.post('/nova-transacao/:tipo', async (req, res) => {
+  const { authorization } = req.headers
+  const { valor, descricao } = req.body
+  const token = authorization?.replace('Bearer', '')
+
+  const validation = transactionScema.validate(req.body, { abortEarly: false })
+
+  if (validation.error) {
+    return res
+      .status(422)
+      .send(validation.error.details.map(detail => detail.message))
+  }
+
+  if (!token) return res.sendStatus(401)
+
+  const novaTransacao = {
+    valor,
+    descricao,
+    tipo: req.params.tipo,
+    data: dayjs().format('DD/MM')
+  }
+
+  try {
+    const session = await db.collection('sessions').findOne({ token })
+    if (!session) {
+      return res.sendStatus(401)
+    }
+    await db.collection('transacoes').insertOne(novaTransacao)
+    return res.sendStatus(200)
   } catch (err) {
     res.status(422).send(err.message)
   }
