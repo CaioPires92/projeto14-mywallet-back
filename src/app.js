@@ -116,6 +116,14 @@ app.post('/nova-transacao/:tipo', async (req, res) => {
 
   if (!token) return res.sendStatus(401)
 
+  const tipo = req.params.tipo.toLocaleLowerCase()
+
+  if (tipo !== 'entrada' && tipo !== 'saida') {
+    return res
+      .status(422)
+      .send('O tipo de transação deve ser "entrada" ou "saida".')
+  }
+
   const novaTransacao = {
     valor,
     descricao,
