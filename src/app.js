@@ -143,6 +143,49 @@ app.post('/nova-transacao/:tipo', async (req, res) => {
   }
 })
 
+app.get('/home', async (req, res) => {
+  const { authorization } = req.headers
+  const token = authorization?.replace('Bearer', '')
+
+  if (!token) return res.sendStatus(401)
+
+  try {
+    const session = await db.collection('sessions').findOne({ token })
+    if (!session) {
+      return res.sendStatus(401)
+    }
+
+    const transactions = await db
+      .collection('transacoes')
+      .find()
+      .sort({ data: -1 })
+      .toArray()
+
+    let saldoFinal = 0
+    let entradas = 0
+    let saidas = 0
+
+    transactions.forEach(transaction => {
+      if (transaction.tipo === 'entrada') {
+        entradas += transaction.valor
+      } else if (transaction.tipo === 'saida') {
+        saidas += transaction.valor
+      }
+    })
+
+    saldoFinal = entradas - saidas
+
+    const response = {
+      transactions,
+      saldoFinal
+    }
+
+    return res.send(response)
+  } catch (err) {
+    res.status(500).send(err.message)
+  }
+})
+
 // deixar a porta escutando, a espera de requisições
 const port = 5000
 app.listen(port, () => {
