@@ -91,8 +91,13 @@ app.post('/', async (req, res) => {
     if (user && bcrypt.compareSync(senha, user.senha)) {
       const token = uuid()
 
+      const response = {
+        token,
+        nome: user.nome
+      }
+
       await db.collection('sessions').insertOne({ userId: user._id, token })
-      res.send(token).status(200)
+      res.send(response).status(200)
     } else {
       res.status(404).send('email ou senha incorretos')
     }
