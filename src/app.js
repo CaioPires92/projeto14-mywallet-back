@@ -102,7 +102,7 @@ app.post('/', async (req, res) => {
 })
 
 app.post('/nova-transacao/:tipo', async (req, res) => {
-  const { authorization } = req.headers
+  const { authorization } = req.header
   const { valor, descricao } = req.body
   const token = authorization?.replace('Bearer', '')
 
@@ -144,7 +144,7 @@ app.post('/nova-transacao/:tipo', async (req, res) => {
 })
 
 app.get('/home', async (req, res) => {
-  const { authorization } = req.headers
+  const { authorization } = req.header
   const token = authorization?.replace('Bearer', '')
 
   if (!token) return res.sendStatus(401)
@@ -187,7 +187,7 @@ app.get('/home', async (req, res) => {
 })
 
 app.post('/logout', async (req, res) => {
-  const { authorization } = req.headers
+  const { authorization } = req.header
   const token = authorization?.replace('Bearer', '')
 
   if (!token) return res.sendStatus(401)
