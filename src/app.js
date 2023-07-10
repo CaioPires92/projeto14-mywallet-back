@@ -37,7 +37,7 @@ const loginSchema = Joi.object({
   senha: Joi.string().min(3).required()
 })
 
-const transactionScema = Joi.object({
+const transactionSchema = Joi.object({
   valor: Joi.number().positive().required(),
   descricao: Joi.string().required()
 })
@@ -107,11 +107,11 @@ app.post('/', async (req, res) => {
 })
 
 app.post('/nova-transacao/:tipo', async (req, res) => {
-  const { authorization } = req.header
+  const { authorization } = req.headers
   const { valor, descricao } = req.body
   const token = authorization?.replace('Bearer', '')
 
-  const validation = transactionScema.validate(req.body, { abortEarly: false })
+  const validation = transactionSchema.validate(req.body, { abortEarly: false })
 
   if (validation.error) {
     return res
@@ -149,7 +149,7 @@ app.post('/nova-transacao/:tipo', async (req, res) => {
 })
 
 app.get('/home', async (req, res) => {
-  const { authorization } = req.header
+  const { authorization } = req.headers
   const token = authorization?.replace('Bearer', '')
 
   if (!token) return res.sendStatus(401)
@@ -192,7 +192,7 @@ app.get('/home', async (req, res) => {
 })
 
 app.post('/logout', async (req, res) => {
-  const { authorization } = req.header
+  const { authorization } = req.headers
   const token = authorization?.replace('Bearer', '')
 
   if (!token) return res.sendStatus(401)
